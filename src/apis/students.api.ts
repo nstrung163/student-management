@@ -10,6 +10,18 @@ export function getStudents(page: number | string, limit: number | string) {
   });
 }
 
+export const getStudent = (id: number | string) => {
+  return http.get<Student>(`/students/${id}`);
+};
+
 export const addStudent = (student: Omit<Student, "id">) => {
   return http.post<Student>("/students", student);
+};
+
+export const updateStudent = (id: string | number, student: Student) => {
+  return http.put<Student>(`/students/${id}`, student);
+};
+
+export const deleteStudent = (id: number | string) => {
+  return http.delete<{}>(`students/${id}`);
 };

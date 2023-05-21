@@ -1,11 +1,11 @@
-import { getStudents } from "apis/students.api";
+import { deleteStudent, getStudents } from "apis/students.api";
 import classNames from "classnames";
 import Skeleton from "pages/Skeleton";
 import { useQueryString } from "pages/utils/utils";
 import { Fragment } from "react";
-// import { useEffect, useState } from "react";
-import { useQuery } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Students as StudentType } from "types/student.type";
 
 const TOTAL_RECORD_A_PAGE = 10;
@@ -24,16 +24,26 @@ export default function Students() {
 
   const queryObj = useQueryString();
   const page = Number(queryObj.page) || 1;
-  const { data, isLoading } = useQuery({
+  const studentQuery = useQuery({
     queryKey: ["students", page],
     queryFn: () => getStudents(page, TOTAL_RECORD_A_PAGE),
     // staleTime: 60 * 1000,
     // cacheTime: 5 * 1000,
     keepPreviousData: true,
   });
-  const totalRecord = Number(data?.headers["x-total-count"] || 0);
+  const totalRecord = Number(studentQuery.data?.headers["x-total-count"] || 0);
   const totalPage = Math.ceil(totalRecord / TOTAL_RECORD_A_PAGE);
-  const students: StudentType[] = data?.data || [];
+  const students: StudentType[] = studentQuery.data?.data || [];
+  const deleteStudentMutation = useMutation({
+    mutationFn: (id: string | number) => deleteStudent(id),
+    onSuccess: (_, id) => {
+      toast.success(`Delete student with id: ${id}`);
+    },
+  });
+
+  const handleDeleteStudent = (id: string | number) => {
+    deleteStudentMutation.mutate(id);
+  };
   return (
     <div>
       <h1 className="text-lg">Students</h1>
@@ -45,8 +55,8 @@ export default function Students() {
         Add
       </Link>
 
-      {isLoading && <Skeleton />}
-      {!isLoading && (
+      {studentQuery.isLoading && <Skeleton />}
+      {!studentQuery.isLoading && (
         <Fragment>
           <div className="relative mt-6 overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
@@ -97,7 +107,10 @@ export default function Students() {
                       >
                         Edit
                       </Link>
-                      <button className="font-medium text-red-600 dark:text-red-500">
+                      <button
+                        className="font-medium text-red-600 dark:text-red-500"
+                        onClick={() => handleDeleteStudent(student.id)}
+                      >
                         Delete
                       </button>
                     </td>
