@@ -1,6 +1,6 @@
 import { deleteStudent, getStudent, getStudents } from "apis/students.api";
 import classNames from "classnames";
-import Skeleton from "pages/Skeleton";
+import Skeleton from "components/Skeleton";
 import { useQueryString } from "pages/utils/utils";
 import { Fragment } from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
@@ -27,11 +27,19 @@ export default function Students() {
   const page = Number(queryObj.page) || 1;
   const studentQuery = useQuery({
     queryKey: ["students", page],
-    queryFn: () => getStudents(page, TOTAL_RECORD_A_PAGE),
+    queryFn: () => {
+      // const controller = new AbortController();
+      // setTimeout(() =>
+      // {
+      //   controller.abort()
+      // }, 3000);
+      return getStudents(page, TOTAL_RECORD_A_PAGE);
+    },
     // staleTime: 60 * 1000,
     // cacheTime: 5 * 1000,
     keepPreviousData: true,
   });
+  console.log("studentQuery", studentQuery);
   const totalRecord = Number(studentQuery.data?.headers["x-total-count"] || 0);
   const totalPage = Math.ceil(totalRecord / TOTAL_RECORD_A_PAGE);
   const students: StudentType[] = studentQuery.data?.data || [];
@@ -57,9 +65,35 @@ export default function Students() {
       staleTime: 10 * 1000,
     });
   };
+
+  const refreshStudent = () => {
+    studentQuery.refetch();
+  };
+
+  const cancelRequest = () => {
+    queryClient.cancelQueries({
+      queryKey: ["students", page],
+      exact: true,
+    });
+  };
   return (
     <div>
       <h1 className="text-lg">Students</h1>
+      <div>
+        <button
+          className="mt-6 rounded bg-blue-500 px-5 py-2 text-white"
+          onClick={refreshStudent}
+        >
+          Refresh Data
+        </button>
+        <br />
+        <button
+          className="mt-6 rounded bg-blue-500 px-5 py-2 text-white"
+          onClick={cancelRequest}
+        >
+          Cancel Request
+        </button>
+      </div>
       <Link
         to="/students/add"
         type="button"
