@@ -1,7 +1,7 @@
 import { addStudent, getStudent, updateStudent } from "apis/students.api";
 import { isAxiosError } from "axios";
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { useMatch, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Student } from "types/student.type";
@@ -29,24 +29,34 @@ export default function AddStudent() {
   const match = useMatch("/students/add");
   const isAddMode = Boolean(match);
   const { id } = useParams();
+  const queryClient = useQueryClient();
   const addStudentMutation = useMutation({
     mutationKey: "addStudent",
     mutationFn: (body: FormStateType) => addStudent(body),
   });
+
   const updateStudentMutation = useMutation({
     mutationKey: ["updateStudent", id],
     mutationFn: (_) => updateStudent(id as string, formState as Student),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["student", id], data);
+    },
   });
+
   const studentQuery = useQuery({
     queryKey: ["student", id],
     queryFn: () => getStudent(id as string),
     enabled: id !== undefined,
+    staleTime: 10 * 1000,
   });
+
+  // Set formState using prefetching data in Students
   useEffect(() => {
     if (studentQuery.data) {
       setFormState(studentQuery.data.data);
     }
   }, [studentQuery.data]);
+
   const errorForm: FormError = useMemo(() => {
     const error = isAddMode
       ? addStudentMutation.error

@@ -1,9 +1,9 @@
-import { deleteStudent, getStudents } from "apis/students.api";
+import { deleteStudent, getStudent, getStudents } from "apis/students.api";
 import classNames from "classnames";
 import Skeleton from "pages/Skeleton";
 import { useQueryString } from "pages/utils/utils";
 import { Fragment } from "react";
-import { useMutation, useQuery } from "react-query";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Students as StudentType } from "types/student.type";
@@ -22,6 +22,7 @@ export default function Students() {
   //     .finally(() => setIsLoading(false));
   // }, []);
 
+  const queryClient = useQueryClient();
   const queryObj = useQueryString();
   const page = Number(queryObj.page) || 1;
   const studentQuery = useQuery({
@@ -38,11 +39,23 @@ export default function Students() {
     mutationFn: (id: string | number) => deleteStudent(id),
     onSuccess: (_, id) => {
       toast.success(`Delete student with id: ${id}`);
+      queryClient.invalidateQueries({
+        queryKey: ["students", page],
+        exact: true,
+      });
     },
   });
 
   const handleDeleteStudent = (id: string | number) => {
     deleteStudentMutation.mutate(id);
+  };
+
+  const handlePrefetchStudent = (id: number) => {
+    queryClient.prefetchQuery({
+      queryKey: ["students", String(id)],
+      queryFn: () => getStudent(id),
+      staleTime: 10 * 1000,
+    });
   };
   return (
     <div>
@@ -84,6 +97,7 @@ export default function Students() {
                   <tr
                     key={student.id}
                     className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+                    onMouseEnter={() => handlePrefetchStudent(student.id)}
                   >
                     <td className="px-6 py-4">{student.id}</td>
                     <td className="px-6 py-4">
