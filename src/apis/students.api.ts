@@ -1,5 +1,5 @@
 import http from "pages/utils/http";
-import { Students } from "types/student.type";
+import { Student, Students } from "types/student.type";
 
 export function getStudents(page: number | string, limit: number | string) {
   return http.get<Students[]>("students", {
@@ -9,3 +9,7 @@ export function getStudents(page: number | string, limit: number | string) {
     },
   });
 }
+
+export const addStudent = (student: Omit<Student, "id">) => {
+  return http.post<Student>("/students", student);
+};

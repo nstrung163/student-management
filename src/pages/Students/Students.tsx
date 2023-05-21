@@ -24,7 +24,7 @@ export default function Students() {
 
   const queryObj = useQueryString();
   const page = Number(queryObj.page) || 1;
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["students", page],
     queryFn: () => getStudents(page, TOTAL_RECORD_A_PAGE),
     // staleTime: 60 * 1000,
@@ -34,17 +34,17 @@ export default function Students() {
   const totalRecord = Number(data?.headers["x-total-count"] || 0);
   const totalPage = Math.ceil(totalRecord / TOTAL_RECORD_A_PAGE);
   const students: StudentType[] = data?.data || [];
-  console.log(
-    "data",
-    data?.data,
-    "isLoading",
-    isLoading,
-    "isFetching",
-    isFetching
-  );
   return (
     <div>
       <h1 className="text-lg">Students</h1>
+      <Link
+        to="/students/add"
+        type="button"
+        className="mr-2 mt-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+      >
+        Add
+      </Link>
+
       {isLoading && <Skeleton />}
       {!isLoading && (
         <Fragment>
